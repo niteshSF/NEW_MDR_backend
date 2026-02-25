@@ -1,5 +1,3 @@
-import uuid
-
 from pydantic import EmailStr
 from typing import Optional
 from sqlmodel import Field, Relationship, SQLModel
@@ -67,22 +65,34 @@ class EntityBase(SQLModel):
 class Language(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
     name: str = Field(unique=True, index=True, max_length=255)
+    manuscripts: list["Manuscript"] = Relationship(back_populates="language", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class Script(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
     name: str = Field(unique=True, index=True, max_length=255)
+    manuscripts: list["Manuscript"] = Relationship(back_populates="script", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class Category(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
     name: str = Field(unique=True, index=True, max_length=255)
+    manuscripts: list["Manuscript"] = Relationship(back_populates="category", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class Type(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
     name: str = Field(unique=True, index=True, max_length=255)
+    manuscripts: list["Manuscript"] = Relationship(back_populates="type", sa_relationship_kwargs={"cascade": "all, delete-orphan"})    
+
+# 1. Linking Table (Many-to-Many)
+class ManuscriptTagLink(SQLModel, table=True):
+    manuscript_id: Optional[int] = Field(default=None, foreign_key="manuscript.id", primary_key=True)
+    tag_id: Optional[int] = Field(default=None, foreign_key="tag.id", primary_key=True)
 
 class Tag(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
     name: str = Field(unique=True, index=True, max_length=255)
+    
+    # Relationship to Manuscript
+    manuscripts: list["Manuscript"] = Relationship(back_populates="tags", link_model=ManuscriptTagLink)
 
 class Branch(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
@@ -96,14 +106,15 @@ class Discipline(EntityBase, table=True):
     indic_name: str = Field(unique=True, index=True, max_length=255)
     branch_id: Optional[int] = Field(default=None, foreign_key="branch.id")
     branch: Optional[Branch] = Relationship(back_populates="disciplines")
+    subjects: list["Subject"] = Relationship(back_populates="disciplines", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class Subject(EntityBase, table=True):
     short_name: str = Field(unique=True, index=True, max_length=10)
     name: str = Field(unique=True, index=True, max_length=255)
     indic_name: str = Field(unique=True, index=True, max_length=255)
     discipline_id: Optional[int] = Field(default=None, foreign_key="discipline.id")
-    discipline: Optional[Discipline] = Relationship(back_populates="subjects")
-    Discipline.subjects = Relationship(back_populates="discipline", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    disciplines: Optional[Discipline] = Relationship(back_populates="subjects")
+    manuscripts: list["Manuscript"] = Relationship(back_populates="subject", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class Manuscript(EntityBase, table=True):
     accession_number: str = Field(unique=True, index=True, max_length=255)
@@ -113,28 +124,33 @@ class Manuscript(EntityBase, table=True):
     
     language_id: Optional[int] = Field(default=None, foreign_key="language.id")
     language: Optional[Language] = Relationship(back_populates="manuscripts")
-    Language.manuscripts = Relationship(back_populates="language", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     
     script_id: Optional[int] = Field(default=None, foreign_key="script.id")
     script: Optional[Script] = Relationship(back_populates="manuscripts")
-    Script.manuscripts = Relationship(back_populates="script", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     
     category_id: Optional[int] = Field(default=None, foreign_key="category.id")
     category: Optional[Category] = Relationship(back_populates="manuscripts")
-    Category.manuscripts = Relationship(back_populates="category", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     
     type_id: Optional[int] = Field(default=None, foreign_key="type.id")
     type: Optional[Type] = Relationship(back_populates="manuscripts")
-    Type.manuscripts = Relationship(back_populates="type", sa_relationship_kwargs={"cascade": "all, delete-orphan"})    
     
-    tags: list[Tag] = Relationship(back_populates="manuscripts", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
-    
+    #tags: list[Tag] = Relationship(back_populates="manuscripts", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    tags: list[Tag] = Relationship(back_populates="manuscripts", link_model=ManuscriptTagLink)
+
     subject_id: Optional[int] = Field(default=None, foreign_key="subject.id")
     subject: Optional[Subject] = Relationship(back_populates="manuscripts")
-    Subject.manuscripts = Relationship(back_populates="subject", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    summary: str | None = Field(default=None, max_length=2000)
+    toc: str | None = Field(default=None, max_length=2000)
+    manuscript_code: str | None = Field(default=None, max_length=255)
+    is_complete: bool = False
+    published: bool = False
+    additional_info: Optional["MSAdditionalInfo"] = Relationship(back_populates="manuscript", sa_relationship_kwargs={"cascade": "all, delete-orphan"})  
+    
+class MSAdditionalInfo(EntityBase, table=True):
+    manuscript_id: Optional[int] = Field(default=None, foreign_key="manuscript.id")
+    manuscript: Optional[Manuscript] = Relationship(back_populates="additional_info")
 
-    summary: str | None = Field(default=None, max_length=5000)
-    toc: str | None = Field(default=None, max_length=5000)
+    no_of_folios: int | None = Field(default=None)
     subject_contribution: str | None = Field(default=None, max_length=5000)
     work_uniqueness: str | None = Field(default=None, max_length=5000)
     author_name: str | None = Field(default=None, max_length=255)
@@ -143,10 +159,6 @@ class Manuscript(EntityBase, table=True):
     date_of_composition: str | None = Field(default=None, max_length=255)
     source: str | None = Field(default=None, max_length=255)
     pg_in_source: str | None = Field(default=None, max_length=255)
-    manuscript_code: str | None = Field(default=None, max_length=255)
-    is_complete: bool = False
-    no_of_folios: int | None = Field(default=None)
-    published: bool = False
     published_title: str | None = Field(default=None, max_length=255)
     translator_name: str | None = Field(default=None, max_length=255)
     publisher_name: str | None = Field(default=None, max_length=255)
@@ -164,12 +176,10 @@ class Manuscript(EntityBase, table=True):
 class Message(SQLModel):
     message: str
 
-
 # JSON payload containing access token
 class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
-
 
 # Contents of JWT token
 class TokenPayload(SQLModel):
