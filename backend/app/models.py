@@ -47,7 +47,7 @@ class User(UserBase, table=True):
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
-    id: uuid.UUID
+    id: int
 
 
 class UsersPublic(SQLModel):
@@ -57,7 +57,108 @@ class UsersPublic(SQLModel):
 #Shared properties
 class EntityBase(SQLModel):
     id: Optional[int] = Field(default=None, primary_key=True)
+    created_by: Optional[int] = Field(default=None, foreign_key="user.id")
+    created_at: Optional[str] = Field(default=None)
+    updated_by: Optional[int] = Field(default=None, foreign_key="user.id")
+    updated_at: Optional[str] = Field(default=None)
+    active: bool = True
 
+# Database model, database table inferred from class name
+class Language(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+
+class Script(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+
+class Category(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+
+class Type(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+
+class Tag(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+
+class Branch(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+    indic_name: str = Field(unique=True, index=True, max_length=255)
+    disciplines: list["Discipline"] = Relationship(back_populates="branch", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+
+class Discipline(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+    indic_name: str = Field(unique=True, index=True, max_length=255)
+    branch_id: Optional[int] = Field(default=None, foreign_key="branch.id")
+    branch: Optional[Branch] = Relationship(back_populates="disciplines")
+
+class Subject(EntityBase, table=True):
+    short_name: str = Field(unique=True, index=True, max_length=10)
+    name: str = Field(unique=True, index=True, max_length=255)
+    indic_name: str = Field(unique=True, index=True, max_length=255)
+    discipline_id: Optional[int] = Field(default=None, foreign_key="discipline.id")
+    discipline: Optional[Discipline] = Relationship(back_populates="subjects")
+    Discipline.subjects = Relationship(back_populates="discipline", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+
+class Manuscript(EntityBase, table=True):
+    accession_number: str = Field(unique=True, index=True, max_length=255)
+    name: str = Field(index=True, max_length=255)
+    indic_name: str = Field(index=True, max_length=255)
+    diacritical_name: str = Field(index=True, max_length=255)
+    
+    language_id: Optional[int] = Field(default=None, foreign_key="language.id")
+    language: Optional[Language] = Relationship(back_populates="manuscripts")
+    Language.manuscripts = Relationship(back_populates="language", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    
+    script_id: Optional[int] = Field(default=None, foreign_key="script.id")
+    script: Optional[Script] = Relationship(back_populates="manuscripts")
+    Script.manuscripts = Relationship(back_populates="script", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    
+    category_id: Optional[int] = Field(default=None, foreign_key="category.id")
+    category: Optional[Category] = Relationship(back_populates="manuscripts")
+    Category.manuscripts = Relationship(back_populates="category", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    
+    type_id: Optional[int] = Field(default=None, foreign_key="type.id")
+    type: Optional[Type] = Relationship(back_populates="manuscripts")
+    Type.manuscripts = Relationship(back_populates="type", sa_relationship_kwargs={"cascade": "all, delete-orphan"})    
+    
+    tags: list[Tag] = Relationship(back_populates="manuscripts", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    
+    subject_id: Optional[int] = Field(default=None, foreign_key="subject.id")
+    subject: Optional[Subject] = Relationship(back_populates="manuscripts")
+    Subject.manuscripts = Relationship(back_populates="subject", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+
+    summary: str | None = Field(default=None, max_length=5000)
+    toc: str | None = Field(default=None, max_length=5000)
+    subject_contribution: str | None = Field(default=None, max_length=5000)
+    work_uniqueness: str | None = Field(default=None, max_length=5000)
+    author_name: str | None = Field(default=None, max_length=255)
+    author_indic_name: str | None = Field(default=None, max_length=255)
+    author_diacritical_name: str | None = Field(default=None, max_length=255)
+    date_of_composition: str | None = Field(default=None, max_length=255)
+    source: str | None = Field(default=None, max_length=255)
+    pg_in_source: str | None = Field(default=None, max_length=255)
+    manuscript_code: str | None = Field(default=None, max_length=255)
+    is_complete: bool = False
+    no_of_folios: int | None = Field(default=None)
+    published: bool = False
+    published_title: str | None = Field(default=None, max_length=255)
+    translator_name: str | None = Field(default=None, max_length=255)
+    publisher_name: str | None = Field(default=None, max_length=255)
+    editor_name: str | None = Field(default=None, max_length=255)
+    publication_year: str | None = Field(default=None, max_length=255)
+    publication_place: str | None = Field(default=None, max_length=255)
+    no_of_pages: int | None = Field(default=None)
+    archive_link: str | None = Field(default=None, max_length=255)
+    beginning_line: str | None = Field(default=None, max_length=255)
+    ending_line: str | None = Field(default=None, max_length=255)
+    colophon: str | None = Field(default=None, max_length=255)
+    notes: str | None = Field(default=None, max_length=1000)
 
 # Generic message
 class Message(SQLModel):
