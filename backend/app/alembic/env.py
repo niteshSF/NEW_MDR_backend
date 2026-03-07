@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add backend folder to PYTHONPATH
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+
 import os
 from logging.config import fileConfig
 
@@ -20,7 +26,7 @@ fileConfig(config.config_file_name)
 # target_metadata = None
 
 from app.models import SQLModel  # noqa
-from app.core.config import settings # noqa
+from app.core.config import settings  # noqa
 
 target_metadata = SQLModel.metadata
 
