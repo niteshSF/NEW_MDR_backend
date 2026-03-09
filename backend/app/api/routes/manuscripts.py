@@ -52,7 +52,7 @@ def get_manuscripts(
     )
 
     if subject:
-        statement = statement.join(Subject).where(
+        statement = statement.join(Manuscript.subject).where(
             func.lower(Subject.name) == subject.lower()
         )
 
@@ -70,14 +70,14 @@ def get_counts(subject: str, session: Session = Depends(get_db)) -> Dict:
     total_manuscripts = session.exec(
         select(func.count())
         .select_from(Manuscript)
-        .join(Subject)
+        .join(Manuscript.subject)
         .where(func.lower(Subject.name) == subject.lower())
     ).one()
 
     total_books = session.exec(
         select(func.count())
         .select_from(Manuscript)
-        .join(Subject)
+        .join(Manuscript.subject)
         .where(
             func.lower(Subject.name) == subject.lower(),
             Manuscript.published == True,
@@ -139,8 +139,8 @@ def get_discipline_counts(
     total_manuscripts = session.exec(
         select(func.count())
         .select_from(Manuscript)
-        .join(Subject)
-        .join(Discipline)
+        .join(Manuscript.subject)
+        .join(Subject.discipline)
         .where(func.lower(Discipline.name) == discipline.lower())
     ).one()
 
@@ -148,8 +148,8 @@ def get_discipline_counts(
     total_books = session.exec(
         select(func.count())
         .select_from(Manuscript)
-        .join(Subject)
-        .join(Discipline)
+        .join(Manuscript.subject)
+        .join(Subject.discipline)
         .where(
             func.lower(Discipline.name) == discipline.lower(),
             Manuscript.published == True,
@@ -169,11 +169,38 @@ def get_discipline_counts(
     }
 
 
-@router.get("/{accession_number}", response_model=ManuscriptPublic)
-def get_manuscript_by_code(accession_number: str, session: Session = Depends(get_db)):
+# @router.get("/{accession_number}", response_model=ManuscriptPublic)
+# def get_manuscript_by_code(accession_number: str, session: Session = Depends(get_db)):
+#     statement = (
+#         select(Manuscript)
+#         .where(Manuscript.accession_number == accession_number)
+#         .options(
+#             selectinload(Manuscript.language),
+#             selectinload(Manuscript.script),
+#             selectinload(Manuscript.category),
+#             selectinload(Manuscript.type),
+#             selectinload(Manuscript.tags),
+#             selectinload(Manuscript.additional_info),
+#             selectinload(Manuscript.book),
+#             selectinload(Manuscript.subject)
+#             .selectinload(Subject.discipline)
+#             .selectinload(Discipline.branch),
+#         )
+#     )
+
+#     manuscript = session.exec(statement).first()
+
+#     if not manuscript:
+#         raise HTTPException(status_code=404, detail="Manuscript not found")
+
+#     return manuscript
+
+
+@router.get("/{id}", response_model=ManuscriptPublic)
+def get_manuscript_by_id(id: int, session: Session = Depends(get_db)):
     statement = (
         select(Manuscript)
-        .where(Manuscript.accession_number == accession_number)
+        .where(Manuscript.id == id)
         .options(
             selectinload(Manuscript.language),
             selectinload(Manuscript.script),
@@ -187,10 +214,7 @@ def get_manuscript_by_code(accession_number: str, session: Session = Depends(get
             .selectinload(Discipline.branch),
         )
     )
-
     manuscript = session.exec(statement).first()
-
     if not manuscript:
         raise HTTPException(status_code=404, detail="Manuscript not found")
-
     return manuscript

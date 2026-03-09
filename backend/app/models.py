@@ -217,26 +217,26 @@ class MSAdditionalInfo(EntityBase, table=True):
     manuscript_id: Optional[int] = Field(default=None, foreign_key="manuscript.id")
     manuscript: Optional[Manuscript] = Relationship(back_populates="additional_info")
 
-    no_of_folios: str | None = Field(default=None)
+    # no_of_folios: str | None = Field(default=None)
     subject_contribution: str | None = Field(default=None, max_length=5000)
     work_uniqueness: str | None = Field(default=None, max_length=5000)
     author_name: str | None = Field(default=None, max_length=255)
     author_indic_name: str | None = Field(default=None, max_length=255)
     author_diacritical_name: str | None = Field(default=None, max_length=255)
-    date_of_composition: str | None = Field(default=None, max_length=255)
-    source: str | None = Field(default=None, max_length=255)
-    pg_in_source: str | None = Field(default=None, max_length=255)
-    published_title: str | None = Field(default=None, max_length=255)
-    translator_name: str | None = Field(default=None, max_length=255)
-    publisher_name: str | None = Field(default=None, max_length=255)
-    editor_name: str | None = Field(default=None, max_length=255)
-    publication_year: str | None = Field(default=None, max_length=255)
-    publication_place: str | None = Field(default=None, max_length=255)
-    no_of_pages: int | None = Field(default=None)
-    archive_link: str | None = Field(default=None, max_length=255)
-    beginning_line: str | None = Field(default=None, max_length=255)
-    ending_line: str | None = Field(default=None, max_length=255)
-    colophon: str | None = Field(default=None, max_length=255)
+    # date_of_composition: str | None = Field(default=None, max_length=255)
+    # source: str | None = Field(default=None, max_length=255)
+    # pg_in_source: str | None = Field(default=None, max_length=255)
+    # published_title: str | None = Field(default=None, max_length=255)
+    # translator_name: str | None = Field(default=None, max_length=255)
+    # publisher_name: str | None = Field(default=None, max_length=255)
+    # editor_name: str | None = Field(default=None, max_length=255)
+    # publication_year: str | None = Field(default=None, max_length=255)
+    # publication_place: str | None = Field(default=None, max_length=255)
+    # no_of_pages: int | None = Field(default=None)
+    # archive_link: str | None = Field(default=None, max_length=255)
+    # beginning_line: str | None = Field(default=None, max_length=255)
+    # ending_line: str | None = Field(default=None, max_length=255)
+    # colophon: str | None = Field(default=None, max_length=255)
     notes: str | None = Field(default=None, max_length=1000)
 
 
@@ -382,26 +382,26 @@ class BookPublic(SQLModel):
 
 class AdditionalInfoPublic(SQLModel):
     id: int
-    no_of_folios: str | None = None
+    # no_of_folios: str | None = None
     subject_contribution: str | None = None
     work_uniqueness: str | None = None
     author_name: str | None = None
     author_indic_name: str | None = None
     author_diacritical_name: str | None = None
-    date_of_composition: str | None = None
-    source: str | None = None
-    pg_in_source: str | None = None
-    published_title: str | None = None
-    translator_name: str | None = None
-    publisher_name: str | None = None
-    editor_name: str | None = None
-    publication_year: str | None = None
-    publication_place: str | None = None
-    no_of_pages: int | None = None
-    archive_link: str | None = None
-    beginning_line: str | None = None
-    ending_line: str | None = None
-    colophon: str | None = None
+    # date_of_composition: str | None = None
+    # source: str | None = None
+    # pg_in_source: str | None = None
+    # published_title: str | None = None
+    # translator_name: str | None = None
+    # publisher_name: str | None = None
+    # editor_name: str | None = None
+    # publication_year: str | None = None
+    # publication_place: str | None = None
+    # no_of_pages: int | None = None
+    # archive_link: str | None = None
+    # beginning_line: str | None = None
+    # ending_line: str | None = None
+    # colophon: str | None = None
     notes: str | None = None
 
     model_config = {"from_attributes": True}
@@ -438,6 +438,11 @@ class ManuscriptPublic(SQLModel):
     manuscript_code: str | None = None
     is_complete: bool
     published: bool
+
+    no_of_folios: str | None = None
+    date_of_composition: str | None = None
+    source: str | None = None
+    pg_in_source: str | None = None
 
     language: LanguagePublic | None = None
     script: ScriptPublic | None = None

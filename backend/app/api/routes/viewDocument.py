@@ -17,9 +17,9 @@ DOCUMENTS_DIR = BASE_DIR / "scripts" / "documents"
 
 
 # List PDFs inside manuscript folder
-@router.get("/viewDocument/{accession_number}")
-def list_pdfs(accession_number: str):
-    folder_path = DOCUMENTS_DIR / accession_number
+@router.get("/viewDocument/{name}")
+def list_files(name: str):
+    folder_path = DOCUMENTS_DIR / name
 
     if not folder_path.exists():
         raise HTTPException(status_code=404, detail="Folder not found")
@@ -27,16 +27,15 @@ def list_pdfs(accession_number: str):
     files = [
         f.name
         for f in folder_path.iterdir()
-        if f.is_file() and f.suffix.lower() == ".pdf"
+        if f.is_file() and f.suffix.lower() in [".pdf", ".jpg", ".jpeg", ".png"]
     ]
 
-    return {"accession_number": accession_number, "files": files}
+    return {"name": name, "files": files}
 
 
-# Open / Download specific PDF
-@router.get("/viewDocument/{accession_number}/{filename}")
-def get_pdf(accession_number: str, filename: str):
-    file_path = DOCUMENTS_DIR / accession_number / filename
+@router.get("/viewDocument/{name}/{filename}")
+def get_pdf(name: str, filename: str):
+    file_path = DOCUMENTS_DIR / name / filename
 
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
