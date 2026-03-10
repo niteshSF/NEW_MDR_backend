@@ -377,6 +377,10 @@ class BookPublic(SQLModel):
     ending_line: str | None = None
     colophon: str | None = None
 
+    original_title: str | None = None
+    author_name: str | None = None
+    manuscript_id: int | None = None
+
     model_config = {"from_attributes": True}
 
 

@@ -15,6 +15,8 @@ from app.api.routes import (
     tags,
     manuscripts,
     viewDocument,
+    search,
+    books,
 )
 
 from app.core.config import settings
@@ -37,6 +39,8 @@ api_router.include_router(types.router)
 api_router.include_router(tags.router)
 api_router.include_router(manuscripts.router)
 api_router.include_router(viewDocument.router, tags=["viewDocument"])
+api_router.include_router(search.router)
+api_router.include_router(books.router, prefix="/books", tags=["books"])
 
 # Private routes only in local
 if settings.ENVIRONMENT == "local":
